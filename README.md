@@ -50,4 +50,4 @@ logs/
 
 ## Codex defaults
 
-Агенты запускаются через `codex exec --json --color never`, prompt передаётся через stdin. По умолчанию используется `workspace-write` sandbox и `approval_policy="never"`, чтобы веб-запуски не зависали на интерактивных подтверждениях.
+Агенты запускаются через `codex exec --json --color never`, prompt передаётся через stdin. По умолчанию используется `danger-full-access` sandbox и `approval_policy="never"`, чтобы веб-запуски могли создавать git-ветки и коммиты без интерактивных подтверждений.

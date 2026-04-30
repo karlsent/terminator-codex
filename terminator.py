@@ -43,7 +43,7 @@ CONFIG_DEFAULTS = {
     "codex_cmd":              "codex",
     "codex_model":            "",
     "codex_profile":          "",
-    "codex_sandbox":          "workspace-write",
+    "codex_sandbox":          "danger-full-access",
     "codex_approval":         "never",
     "use_proxy":              False,
     "proxy_http_port":        10809,
@@ -121,7 +121,7 @@ def _generate_task_agent_config_sh(cfg):
         f'CODEX_CMD="{cfg.get("codex_cmd", "codex")}"',
         f'CODEX_MODEL="{cfg.get("codex_model", "")}"',
         f'CODEX_PROFILE="{cfg.get("codex_profile", "")}"',
-        f'CODEX_SANDBOX="{cfg.get("codex_sandbox", "workspace-write")}"',
+        f'CODEX_SANDBOX="{cfg.get("codex_sandbox", "danger-full-access")}"',
         f'CODEX_APPROVAL="{cfg.get("codex_approval", "never")}"',
         f'USE_PROXY="{str(cfg.get("use_proxy", False)).lower()}"',
         f'PROXY_HTTP_PORT="{cfg.get("proxy_http_port", 10809)}"',
@@ -1406,7 +1406,7 @@ td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:13px;vertic
       </div>
       <div class="form-group">
         <label>Sandbox</label>
-        <input type="text" id="s-codex_sandbox" value="{{ config.get('codex_sandbox', 'workspace-write') }}" placeholder="workspace-write">
+        <input type="text" id="s-codex_sandbox" value="{{ config.get('codex_sandbox', 'danger-full-access') }}" placeholder="danger-full-access">
       </div>
       <div class="form-group">
         <label>Approval policy</label>
