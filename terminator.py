@@ -668,13 +668,19 @@ def _run_agent_thread(run_id, agent_key, params):
                     event = json.loads(raw_line)
                     html  = format_event_html(event)
                     if html: q.put({"html": html})
+                    text = _extract_assistant_text_from_event(event)
+                    if text and "[FATAL]" in text:
+                        status = "error"
                     if event.get("type") == "result":
                         cost        = event.get("total_cost_usd", 0)
                         duration_ms = event.get("duration_ms", 0)
-                        status      = event.get("subtype", "success")
+                        if status != "error":
+                            status = event.get("subtype", "success")
                 except (json.JSONDecodeError, ValueError):
                     if raw_line.strip():
                         q.put({"html": f'<div class="log-plain dim">{_esc(raw_line)}</div>'})
+                        if "[FATAL]" in raw_line:
+                            status = "error"
 
         proc.wait()
         if proc.returncode not in (0, -15) and status == "running":

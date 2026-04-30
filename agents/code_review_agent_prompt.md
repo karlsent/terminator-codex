@@ -24,7 +24,7 @@
 ### Основные данные
 
 ```bash
-curl -s --noproxy "*" "BITRIX_REST_PLACEHOLDER/tasks.task.get?taskId={{TASK_ID}}&select[]=*"
+curl -g -s "BITRIX_REST_PLACEHOLDER/tasks.task.get?taskId={{TASK_ID}}&select[]=*"
 ```
 
 Из ответа запомни: `title`, `description`, `status`, `deadline`, `ufTaskWebdavFiles`, `archiveLink`.
@@ -37,7 +37,7 @@ curl -s --noproxy "*" "BITRIX_REST_PLACEHOLDER/tasks.task.get?taskId={{TASK_ID}}
 ### Комментарии
 
 ```bash
-curl -s --noproxy "*" "BITRIX_REST_PLACEHOLDER/task.commentitem.getlist?TASKID={{TASK_ID}}&order[DATE_CREATE]=ASC"
+curl -g -s "BITRIX_REST_PLACEHOLDER/task.commentitem.getlist?TASKID={{TASK_ID}}&order[DATE_CREATE]=ASC"
 ```
 
 Прочитай все комментарии — они могут уточнять требования, содержать правки или решения, принятые в процессе.
@@ -52,12 +52,12 @@ curl -s --noproxy "*" "BITRIX_REST_PLACEHOLDER/task.commentitem.getlist?TASKID={
 
 Если `ufTaskWebdavFiles` не пустой — для каждого ID:
 ```bash
-curl -s --noproxy "*" "BITRIX_REST_PLACEHOLDER/disk.attachedObject.get?id=<FILE_ID>"
+curl -g -s "BITRIX_REST_PLACEHOLDER/disk.attachedObject.get?id=<FILE_ID>"
 ```
 Из ответа возьми `NAME` и `DOWNLOAD_URL`. Скачай:
 ```bash
 mkdir -p "{{ATTACHMENTS_DIR}}/{{TASK_ID}}"
-curl -s --noproxy "*" -L "<DOWNLOAD_URL>" \
+curl -g -s -L "<DOWNLOAD_URL>" \
   -o "{{ATTACHMENTS_DIR}}/{{TASK_ID}}/<NAME>"
 ```
 
@@ -65,7 +65,7 @@ curl -s --noproxy "*" -L "<DOWNLOAD_URL>" \
 
 ```bash
 mkdir -p "{{ATTACHMENTS_DIR}}"
-curl -s --noproxy "*" -L \
+curl -g -s -L \
   -o "{{ATTACHMENTS_DIR}}/{{TASK_ID}}_files.zip" \
   "<archiveLink>"
 unzip -o "{{ATTACHMENTS_DIR}}/{{TASK_ID}}_files.zip" \
