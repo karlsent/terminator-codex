@@ -17,7 +17,7 @@
 ## Шаг 1 — Загрузить контекст задачи
 
 ```bash
-curl -g -s "BITRIX_REST_PLACEHOLDER/tasks.task.get?taskId={{TASK_ID}}&select[]=*"
+curl -g -s --noproxy "*" "BITRIX_REST_PLACEHOLDER/tasks.task.get?taskId={{TASK_ID}}&select[]=*"
 ```
 
 Из ответа запомни: `title`, `description`, `status`. Это нужно чтобы понять **что и зачем** реализовано в ветке.

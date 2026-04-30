@@ -38,7 +38,7 @@ run_codex() {
     local sandbox="${1:-${CODEX_SANDBOX:-workspace-write}}"
     shift || true
     local codex_bin="${CODEX_CMD:-codex}"
-    local args=(exec --json --color never --sandbox "$sandbox" -c "approval_policy=\"${CODEX_APPROVAL:-never}\"")
+    local args=(exec --json --color never --sandbox "$sandbox" -c "approval_policy=\"${CODEX_APPROVAL:-never}\"" -c "sandbox_workspace_write.network_access=true")
     if [ -n "${CODEX_MODEL:-}" ]; then args+=(-m "$CODEX_MODEL"); fi
     if [ -n "${CODEX_PROFILE:-}" ]; then args+=(-p "$CODEX_PROFILE"); fi
     if [ -n "${GIT_REPO:-}" ]; then args+=(-C "$GIT_REPO"); fi
