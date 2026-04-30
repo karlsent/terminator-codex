@@ -520,6 +520,93 @@ def format_event_html(event):
 runs      = {}
 runs_lock = threading.Lock()
 
+def _tcp_open(host, port, timeout=0.5):
+    try:
+        s = socket.socket()
+        s.settimeout(timeout)
+        s.connect((host, int(port)))
+        s.close()
+        return True
+    except Exception:
+        return False
+
+def _proxy_already_running(cfg):
+    http_port  = cfg.get("proxy_http_port", 10809)
+    socks_port = cfg.get("proxy_socks_port", 10808)
+    if _tcp_open("127.0.0.1", http_port) or _tcp_open("127.0.0.1", socks_port):
+        return True
+
+    try:
+        return subprocess.run(
+            ["pgrep", "-f", "v2ray.*run.*-config|proxy_client.py"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        ).returncode == 0
+    except Exception:
+        return False
+
+def _configure_proxy_env(cfg, env):
+    if not cfg.get("use_proxy", False):
+        return
+
+    http_port  = cfg.get("proxy_http_port", 10809)
+    socks_port = cfg.get("proxy_socks_port", 10808)
+    http_proxy = f"http://127.0.0.1:{http_port}"
+    socks_proxy = f"socks5://127.0.0.1:{socks_port}"
+
+    env.update({
+        "http_proxy": http_proxy,
+        "https_proxy": http_proxy,
+        "HTTP_PROXY": http_proxy,
+        "HTTPS_PROXY": http_proxy,
+        "all_proxy": socks_proxy,
+        "ALL_PROXY": socks_proxy,
+        "CODEX_NETWORK_PROXY_ACTIVE": "1",
+    })
+
+    no_proxy = cfg.get("no_proxy_domains", "").strip()
+    if no_proxy:
+        env["no_proxy"] = no_proxy
+        env["NO_PROXY"] = no_proxy
+
+def _ensure_proxy_running(cfg, q=None):
+    if not cfg.get("use_proxy", False):
+        return
+
+    if _proxy_already_running(cfg):
+        return
+
+    script = cfg.get("proxy_start_script", "")
+    if not script or not os.path.exists(script):
+        if q:
+            q.put({"html": f'<div class="log-warn">Прокси включён, но start script не найден: {_esc(script)}</div>'})
+        return
+
+    if q:
+        q.put({"html": '<div class="log-info">Прокси не запущен, запускаю перед стартом Codex...</div>'})
+
+    env = os.environ.copy()
+    url = cfg.get("proxy_subscription_url", "")
+    if url:
+        env["PROXY_SUBSCRIPTION_URL"] = url
+    cmd = ["bash", script, "--url", url] if url else ["bash", script]
+
+    try:
+        result = subprocess.run(
+            cmd,
+            cwd=os.path.dirname(script),
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            timeout=280,
+        )
+        if result.returncode != 0 and q:
+            q.put({"html": f'<div class="log-error">Не удалось запустить прокси: {_esc(_trunc(result.stdout, 600))}</div>'})
+    except Exception as e:
+        if q:
+            q.put({"html": f'<div class="log-error">Ошибка запуска прокси: {_esc(str(e))}</div>'})
+
 def _run_agent_thread(run_id, agent_key, params):
     cfg    = load_config()
     agent  = AGENTS[agent_key]
@@ -545,6 +632,7 @@ def _run_agent_thread(run_id, agent_key, params):
     env = os.environ.copy()
     env["YC_PROFILE"]           = cfg.get("yc_profile","default")
     env["TERMINATOR_CONFIG_SH"] = CONFIG_SH
+    _configure_proxy_env(cfg, env)
 
     with runs_lock:
         run_info = runs[run_id]
@@ -564,6 +652,7 @@ def _run_agent_thread(run_id, agent_key, params):
     cwd = git_repo if git_repo and os.path.isdir(git_repo) else PROGRAM_DIR
 
     try:
+        _ensure_proxy_running(cfg, q)
         proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                 cwd=cwd, env=env, text=True, bufsize=1, start_new_session=True)
         with runs_lock:
